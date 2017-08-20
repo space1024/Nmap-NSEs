@@ -28,9 +28,8 @@ shown in Shodan for Minecraft Servers.
 --<elem key="Online Players">0</elem>
 --<elem key="Version">1.8</elem>
 --<elem key="Protocol">47</elem>
---<elem key="Login Status">Original Server</elem>
 
-author = "Stephen Hilt & space1024"
+author = "Stephen Hilt"
 license = "Same as Nmap--See http://nmap.org/book/man-legal.html"
 categories = {"safe","discovery"}
 
@@ -101,13 +100,13 @@ action = function(host, port)
   local pos, value = json.parse(tostring(json_string))
     -- close socket before parsing
   sock:close()
-  
+
   --http://wiki.vg/Protocol_version_numbers
   local protocol_vers = tonumber(value["version"]["protocol"])
   local login_handshake = bin.pack("H>sCA>SH", tonumber(string.len(host["ip"],16)) ,protocol_vers ,string.len(host["ip"]) , tostring(host["ip"]) , port["number"], "02")
 	--if you want you can do this in one line :)
 	--http://wiki.vg/Protocol#Login_Start
-	local username = "NmapBot" --change this if you need
+	local username = "NmapBot"
 	local packet_id = "00"
 	local total_len = string.len(string.fromhex(packet_id)) + 1 + string.len(username)
 	local login_packet = bin.pack("CHCA", total_len, packet_id, string.len(username), username)
@@ -116,7 +115,6 @@ action = function(host, port)
   
   -- connect to remote host (again...)
   local constatus, conerr = sock:connect(host, port)
-  -- if not successful debug error message and return nil
   if not constatus then
     stdnse.debug1(
       'Error establishing a TCP connection for %s - %s', host, conerr
@@ -146,7 +144,7 @@ action = function(host, port)
 		end
     elseif (string.sub(response2,2,2) == "\x01") then
 	resp_status = "Original server"
-	elseif (string.sub(response2,2,2) == "\x02") then
+	elseif (string.sub(response2,2,2) == "\x02" or response2 == "\x03\x03\x80\x02") then
 	resp_status = "Cracked server"
 	elseif (response2 == "EOF") then
 	resp_status = "Null Response"
